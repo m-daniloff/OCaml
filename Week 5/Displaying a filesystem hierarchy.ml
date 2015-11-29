@@ -107,3 +107,8 @@ let rec print_file lvl name =
     | _ -> print_string "| "; print_bar (i - 1) in
   print_bar lvl;
   print_string name;;
+  
+let print_symlink lvl name path =
+  print_file lvl name;
+  print_string " -> ";
+  print_path path;;
