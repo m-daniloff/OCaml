@@ -94,17 +94,18 @@ and node =
   | Dir of filesystem
   | Symlink of string list
   
+let rec print_bar i =
+    match i with
+    | 0 -> ()
+    | _ -> print_string "| "; print_bar (i - 1);;
+	
 let rec print_path path =
   match path with
   | [] -> () 
   | h::[] -> print_string h
   | h::t -> print_string h; print_string "/"; print_path t ;;
 
-let rec print_file lvl name =
-  let rec print_bar i =
-    match i with
-    | 0 -> ()
-    | _ -> print_string "| "; print_bar (i - 1) in
+let rec print_file lvl name =  
   print_bar lvl;
   print_string name;;
   
@@ -112,3 +113,49 @@ let print_symlink lvl name path =
   print_file lvl name;
   print_string " -> ";
   print_path path;;
+  
+let rec print_dir lvl name =
+  print_bar lvl;
+  print_string "/";
+  print_string name;;  
+
+let print_filesystem root =
+  let rec print_node lvl item =
+    let (name, nd) = item in match nd with
+    | File -> print_newline (); print_file lvl name
+    | Symlink sLink -> print_newline (); print_symlink lvl name sLink
+    | Dir fs -> print_newline (); print_dir lvl name; print_filesystem (lvl +1) fs
+    
+  and print_filesystem lvl items =
+    match items with
+    | [] -> ()
+    | h::t -> print_node lvl h; print_filesystem lvl t in
+  print_filesystem 0 root ;;
+
+  
+ let input = [ "photos", Dir
+    [ "march", Dir
+        [ "photo_1.bmp", File ;
+          "photo_2.bmp", File ;
+          "photo_3.bmp", File ;
+          "index.html", File ] ;
+      "april", Dir
+        [ "photo_1.bmp", File ;
+          "photo_2.bmp", File ;
+          "index.html", File ] ] ;
+  "videos", Dir
+    [ "video1.avi", File ;
+      "video2.avi", File ;
+      "video3.avi", File ;
+      "video4.avi", File ;
+      "best.avi", Symlink [ "video4.avi" ] ;
+      "index.html", File ] ;
+  "indexes", Dir
+    [ "videos.html",
+      Symlink [ ".." ; "videos" ; "index.html" ] ;
+      "photos_march.html",
+      Symlink [ ".." ; "photos" ; "march" ; "index.html" ] ;
+      "photos_april.html",
+      Symlink [ ".." ; "photos" ; "april" ; "index.html" ] ;
+      "photos_may.html",
+      Symlink [ ".." ; "photos" ; "may" ; "index.html" ] ] ];;
