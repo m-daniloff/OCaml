@@ -45,3 +45,19 @@ let rec balanced = function
           let (rh, rc') = height r in (lh = rh, lc + rc + lc' + rc')
         else (false, lc + rc)
       else (false, lc);;
+	  
+let bal_height bst =
+  let rec aux h c = function
+    | Empty -> (h, c + 1) 
+    | Node (t,_,t') -> match ((aux (h + 1) c t), (aux (h + 1) c t')) with
+        ((h1, c1),(h2,c2)) ->
+          if h1 <> h2 then raise (Unbalanced (c1 + c2))
+          else
+            ((h1),(c1 + c2))
+  in aux 0 0 bst;;
+  
+let balanced_fast bst =
+  let (h, c) = try bal_height bst with Unbalanced n -> (-1, n) in
+  match (h, c) with
+  | -1, x -> (false, x)
+  | _, x -> (true, x);;
