@@ -20,4 +20,13 @@ let output_multiples x n m =
       end
 
   done;;
-	  
+
+exception ZeroException of int;;
+let display_sign_until_zero f m =
+  try 
+    for i = 0 to m do
+      if (f i) > 0 then begin print_string "positive"; print_newline(); end
+      else if (f i) < 0 then begin print_string "negative"; print_newline(); end
+      else raise (ZeroException 0)
+    done;
+  with ZeroException x -> print_string "zero";;

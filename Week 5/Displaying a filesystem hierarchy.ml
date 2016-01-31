@@ -1,5 +1,5 @@
 (*
-DISPLAYING A FILESYSTEM HIERARCHY  (100/320 points)
+DISPLAYING A FILESYSTEM HIERARCHY  (320/320 points)
 In this exercise, we will pretty-print directory structures.
 
 The prelude gives the types that we will use to represent directory structures. 
@@ -93,12 +93,11 @@ and node =
   | File
   | Dir of filesystem
   | Symlink of string list
-  
 let rec print_bar i =
-    match i with
-    | 0 -> ()
-    | _ -> print_string "| "; print_bar (i - 1);;
-	
+  match i with
+  | 0 -> ()
+  | _ -> print_string "| "; print_bar (i - 1);;
+
 let rec print_path path =
   match path with
   | [] -> () 
@@ -117,45 +116,67 @@ let print_symlink lvl name path =
 let rec print_dir lvl name =
   print_bar lvl;
   print_string "/";
-  print_string name;;  
+  print_string name;;
 
+
+
+let rec resolve sym path = 
+  let rec resolve' acc path =
+    match path with
+    | [] -> List.rev acc
+    | x::xs -> 
+        if x = ".." then
+          if List.length acc >= 1 then
+            resolve' (List.tl acc) xs
+          else
+            resolve' acc xs
+        else 
+          resolve' ([x] @ acc) xs
+  in resolve' (List.tl (List.rev sym)) path ;;
+
+let rec file_exists root path =
+  match path with
+  | [] -> false
+  | p::ps ->
+      match root with
+      | [] -> false
+      | (name,node)::ns ->
+          if name = p then 
+            match node with
+            | File -> true
+            | Dir filesystem -> file_exists filesystem ps
+            | Symlink path ->  true
+          else file_exists ns path;;
+
+(* move print_filesystem here for exercise 8 *)
 let print_filesystem root =
-  let rec print_node lvl item =
-    let (name, nd) = item in match nd with
-    | File -> print_newline (); print_file lvl name
-    | Symlink sLink -> print_newline (); print_symlink lvl name sLink
-    | Dir fs -> print_newline (); print_dir lvl name; print_filesystem (lvl +1) fs
-    
-  and print_filesystem lvl items =
+  let rec print_filesystem lvl items sym =
     match items with
-    | [] -> ()
-    | h::t -> print_node lvl h; print_filesystem lvl t in
-  print_filesystem 0 root ;;
-
-  
- let input = [ "photos", Dir
-    [ "march", Dir
-        [ "photo_1.bmp", File ;
-          "photo_2.bmp", File ;
-          "photo_3.bmp", File ;
-          "index.html", File ] ;
-      "april", Dir
-        [ "photo_1.bmp", File ;
-          "photo_2.bmp", File ;
-          "index.html", File ] ] ;
-  "videos", Dir
-    [ "video1.avi", File ;
-      "video2.avi", File ;
-      "video3.avi", File ;
-      "video4.avi", File ;
-      "best.avi", Symlink [ "video4.avi" ] ;
-      "index.html", File ] ;
-  "indexes", Dir
-    [ "videos.html",
-      Symlink [ ".." ; "videos" ; "index.html" ] ;
-      "photos_march.html",
-      Symlink [ ".." ; "photos" ; "march" ; "index.html" ] ;
-      "photos_april.html",
-      Symlink [ ".." ; "photos" ; "april" ; "index.html" ] ;
-      "photos_may.html",
-      Symlink [ ".." ; "photos" ; "may" ; "index.html" ] ] ];;
+    | [] -> print_bytes ""
+    | (name,node)::ns -> 
+        match node with
+        | File ->
+            begin
+              print_file lvl name; 
+              print_newline();
+              print_filesystem lvl ns sym
+            end
+        | Dir filesystem ->
+            begin
+              print_dir lvl name; 
+              print_newline(); 
+              print_filesystem (lvl+1) filesystem (sym@[name]);
+              print_filesystem lvl ns sym;
+            end
+        | Symlink path -> 
+            let valid_path =
+              if file_exists root (resolve (sym@[name]) path) then
+                path
+              else 
+                ["INVALID"] in
+            begin
+              print_symlink lvl name valid_path; 
+              print_newline();
+              print_filesystem lvl ns sym
+            end
+  in print_filesystem 0 root [];; 

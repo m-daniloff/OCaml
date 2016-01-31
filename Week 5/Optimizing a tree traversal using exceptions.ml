@@ -1,5 +1,5 @@
 (*
-OPTIMISING A TREE TRAVERSAL USING EXCEPTIONS  (22/44 points)
+OPTIMISING A TREE TRAVERSAL USING EXCEPTIONS  (44/44 points)
 In a previous exercise, we defined binary trees of type 'a bt (given in the prelude). 
 A binary search tree is balanced if, for all internal node n, its two subtrees have the same height.
 
@@ -45,7 +45,7 @@ let rec balanced = function
           let (rh, rc') = height r in (lh = rh, lc + rc + lc' + rc')
         else (false, lc + rc)
       else (false, lc);;
-	  
+
 let bal_height bst =
   let rec aux h c = function
     | Empty -> (h, c + 1) 
@@ -55,7 +55,7 @@ let bal_height bst =
           else
             ((h1),(c1 + c2))
   in aux 0 0 bst;;
-  
+
 let balanced_fast bst =
   let (h, c) = try bal_height bst with Unbalanced n -> (-1, n) in
   match (h, c) with
